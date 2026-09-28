@@ -1,0 +1,30 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments (adjust folder name if yours is different)
+.venv/
+venv/
+env/
+ENV/
+
+# VS Code settings and workspace configurations
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# Testing and coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Environment variables and secrets
+.env
+*.env
+
+# Windows NTFS Alternate Data Streams
+*Zone.Identifier
