@@ -19,6 +19,9 @@ from collections import deque
 from dataclasses import dataclass, field
 from typing import Any, Iterable, Optional
 
+import time
+import tracemalloc
+
 
 # ===========================================================================
 # GIVEN -- do not modify this section
@@ -137,10 +140,6 @@ class VacuumProblem(Problem):
     def __init__(self, initial=("A", "Dirty", "Dirty")):
         super().__init__(initial)
         self.action_map = {
-            # TODO: still works?
-            # "Suck": "Clean",
-            # "Right": "A",       # Going from B -> A
-            # "Left": "B",        # Going from A -> B
             "A": "Right",       # At A, allows Right
             "B": "Left"         # At B, allows Left
         }
@@ -150,7 +149,7 @@ class VacuumProblem(Problem):
         """
         Return area index of '1' if area is 'A', and '2' if area is 'B'
         """
-        return 1 if area =="A" else 2
+        return 1 if area == "A" else 2
 
     def actions(self, state):
         """
@@ -159,7 +158,7 @@ class VacuumProblem(Problem):
             no-op actions in actions()).
         - 'Suck' is applicable in every state, even a clean one.
         """
-        applicable_actions = ["Suck"]
+        applicable_actions = ["Suck"] # "Suck" is always an option regardless of state
         applicable_actions.append(self.action_map[state[0]])
         return sorted(applicable_actions)
         
@@ -266,14 +265,15 @@ class EightPuzzleProblem(Problem):
 
 
 def is_solvable(state: tuple) -> bool:
-    """Return True if `state` can reach EightPuzzleProblem.GOAL.
+    """
+    Return True if `state` can reach EightPuzzleProblem.GOAL.
 
     Exactly half of the 9! arrangements are reachable from any given state.
     Count inversions among the eight numbered tiles, ignoring the blank: two
     states are mutually reachable if and only if their inversion counts have
     the same parity.
 
-    TODO: implement this. Without it, an unsolvable input still terminates,
+    Without it, an unsolvable input still terminates,
     but only after your search has exhausted all 181,440 reachable states.
     """
     tiles = [t for t in state if t != 0]
@@ -314,7 +314,7 @@ def uniform_cost_search(problem: Problem, counters: Counters = None):
     while frontier:
         # print(f"Frontier: { list(frontier) }")  # DEBUG
         # print(f"Reached: { reached }")  # DEBUG
-        cost, tbi, node = heapq.heappop(frontier)
+        cost, _, node = heapq.heappop(frontier)
 
         if cost > reached[node.state]:
             continue
@@ -385,7 +385,8 @@ def depth_limited_search(problem: Problem, limit: int, counters: Counters = None
 
 def iterative_deepening_search(problem: Problem, counters: Counters = None,
                                max_limit: int = 40):
-    """TODO: call depth_limited_search with limit 0, 1, 2, ... until it returns
+    """
+    Call depth_limited_search with limit 0, 1, 2, ... until it returns
     something other than "cutoff". Return that result (a Node or None).
 
     Accumulate counters across all iterations -- the whole point of the
@@ -419,22 +420,41 @@ def run_experiments() -> None:
         ("UCS", uniform_cost_search),
         ("IDS", iterative_deepening_search),
     ]
-    header = f"{'puzzle':<8}{'algorithm':<12}{'len':<6}{'cost':<8}{'expanded':<11}{'generated':<11}"
+    header = f"{'puzzle':<8}{'algorithm':<12}{'len':<6}{'cost':<8}{'expanded':<11}{'generated':<11}{'elapsed':<11}{'peak mem':<11}"
     print(header)
     print("-" * len(header))
     for i, puzzle in enumerate(TEST_PUZZLES, start=1):
+        print(f"Puzzle: {puzzle}")
         if not is_solvable(puzzle):
             print(f"{i:<8}unsolvable -- skipped")
             continue
         for name, algo in algorithms:
             counters = Counters()
+            # 1. Start memory tracking and time baseline
+            tracemalloc.start()
+            start_time = time.perf_counter()
+
             node = algo(EightPuzzleProblem(puzzle), counters=counters)
+
+            # 3. Capture end time and memory statistics
+            end_time = time.perf_counter()
+            current, peak = tracemalloc.get_traced_memory()
+
+            # 4. Stop memory tracking
+            tracemalloc.stop()
+
+            # Calculate results
+            execution_time = end_time - start_time
+            execution_time_ms = execution_time * 1000
+            peak_memory_kb = peak / 1024
+
             if node is None:
                 print(f"{i:<8}{name:<12}{'-- no solution --'}")
                 continue
             actions = solution_actions(node)
             print(f"{i:<8}{name:<12}{len(actions):<6}{node.path_cost:<8g}"
-                  f"{counters.expanded:<11}{counters.generated:<11}")
+                  f"{counters.expanded:<11}{counters.generated:<11}"
+                  f"{execution_time_ms:<11.6f}{peak_memory_kb:<11.2f}")
         print()
 
 
