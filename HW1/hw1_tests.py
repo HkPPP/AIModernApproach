@@ -73,6 +73,7 @@ def t_vacuum_already_clean():
     assert node is not None and hw.solution_actions(node) == [], \
         "an initial state that is already a goal returns the empty plan"
 
+
 # ------------------------------------------------------------ 8-puzzle -----
 
 def t_puzzle_actions_corner():
