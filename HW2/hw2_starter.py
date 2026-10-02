@@ -287,11 +287,39 @@ def astar_search(problem: Problem, h: Callable[[Any], float],
 
 def greedy_best_first_search(problem: Problem, h: Callable[[Any], float],
                              counters: Counters = None) -> Optional[Node]:
-    """Greedy best-first graph search. Priority f = h only. Goal test on POP."""
-    # TODO (Part C4). Like astar_search, but the priority is h(state) ONLY.
-    # Use a `reached` set so a state is only ever pushed once.
-    # Test the goal when a node is popped.
-    raise NotImplementedError("greedy_best_first_search")
+    """
+    Greedy best-first graph search. Priority f = h only. Goal test on POP.
+    TODO (Part C4). Like astar_search, but the priority is h(state) ONLY.
+    Use a `reached` set so a state is only ever pushed once.
+    Test the goal when a node is popped.
+    """
+    counters = counters or Counters()
+    tiebreak = itertools.count()
+    frontier = []
+
+    node = Node(problem.initial)
+    counters.generated += 1
+    f = h(node.state)
+    heapq.heappush(frontier, (f, tiebreak, node))
+    reached = {node.state: f}
+
+    while frontier:
+        cost, _, node = heapq.heappop(frontier)
+        if cost > reached[node.state]:
+            continue
+
+        if problem.is_goal(node.state):
+            return node
+
+        counters.expanded += 1
+        for child in expand(problem, node):
+            counters.generated += 1
+            f = h(child.state)
+            if child.state not in reached or f < reached[child.state]:
+                reached[child.state] = f
+                heapq.heappush(frontier, (f, tiebreak, child))
+    return None
+    
 
 
 # ===========================================================================
