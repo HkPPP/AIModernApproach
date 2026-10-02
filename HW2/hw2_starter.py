@@ -210,31 +210,79 @@ def new_england_csp(colors: List[str]) -> CSP:
 
 
 def misplaced_tiles(state: tuple, goal: tuple = EightPuzzleProblem.GOAL) -> int:
-    """h1: number of non-blank tiles not in their goal square."""
-    # TODO (Part C1). Count non-blank tiles that are not in their goal square.
-    # Do NOT count the blank -- that would let h overestimate by one.
-    raise NotImplementedError("misplaced_tiles")
+    """
+    h1: number of non-blank tiles not in their goal square.
+    (Part C1). Count non-blank tiles that are not in their goal square.
+    Do NOT count the blank -- that would let h overestimate by one.
+    """
+    count = sum([1 for c, g in zip(state, goal) if c != g])
+    return count - 1 if count else 0
 
 
 def manhattan_distance(state: tuple, goal: tuple = EightPuzzleProblem.GOAL) -> int:
-    """h2: sum over non-blank tiles of |row - goal row| + |col - goal col|."""
-    # TODO (Part C2). For each non-blank tile, add |row - goal_row| + |col - goal_col|.
-    # Hint: square i is at row i // 3, column i % 3.
-    raise NotImplementedError("manhattan_distance")
+    """
+    h2: sum over non-blank tiles of |row - goal row| + |col - goal col|.
+    Hint: square i is at row i // 3, column i % 3.
+    """
+    
+    # S: [4,0,1,2,3,8,5,6,7]
+    # G: [3,2,4,5,7,1,9,3,0]
+    distance = 0
+    goal_to_index = { i: n for i, n in enumerate(goal)}
+    for i, n in enumerate(state):
+        if n == 0:
+            continue
+        s_row, s_col = divmod(i, 3)
+        g_row, g_col = divmod(goal_to_index[n], 3)
+
+        distance += abs(s_row - g_row) + abs(s_col - g_col)
+
+    return distance
+
+
 
 
 def astar_search(problem: Problem, h: Callable[[Any], float],
                  counters: Counters = None) -> Optional[Node]:
-    """A* graph search. Priority f = g + h. Goal test on POP.
+    """
+    A* graph search. Priority f = g + h. Goal test on POP.
 
     Re-adds a state whenever a strictly cheaper path to it is found, so it is
     optimal with any admissible h.
+    (Part C3). Copy uniform_cost_search and change ONE thing:
+    the number you push onto the heap is g + h(state), not g.
+    Keep: the tiebreak counter, the best_g table, the stale-copy skip,
+    and the goal test ON POP. Count counters.expanded exactly as UCS does.
     """
-    # TODO (Part C3). Copy uniform_cost_search and change ONE thing:
-    # the number you push onto the heap is g + h(state), not g.
-    # Keep: the tiebreak counter, the best_g table, the stale-copy skip,
-    # and the goal test ON POP. Count counters.expanded exactly as UCS does.
-    raise NotImplementedError("astar_search")
+    counters = counters or Counters()
+    frontier = []
+    tiebreak = itertools.count()
+
+    node = Node(state=problem.initial)
+    counters.generated += 1
+    # f = g + h(state) where g is path_cost and h is the hueristic, but g is 0 initially
+    f = h(node.state)
+    heapq.heappush(frontier, (f, next(tiebreak), node))
+    reached = {node.state: f}
+
+    while frontier:
+        cost, _, node = heapq.heappop(frontier)
+
+        if cost > reached[node.state]:
+            continue
+
+        if problem.is_goal(node.state):
+            return node
+
+        counters.expanded += 1
+        for child in expand(problem, node):
+            counters.generated += 1
+            f = child.path_cost + h(child.state)
+            if child.state not in reached or f < reached[child.state]:
+                reached[child.state] = f
+                heapq.heappush(frontier, (f, next(tiebreak), child))
+    return None
+
 
 
 def greedy_best_first_search(problem: Problem, h: Callable[[Any], float],
