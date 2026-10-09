@@ -289,7 +289,7 @@ def greedy_best_first_search(problem: Problem, h: Callable[[Any], float],
                              counters: Counters = None) -> Optional[Node]:
     """
     Greedy best-first graph search. Priority f = h only. Goal test on POP.
-    TODO (Part C4). Like astar_search, but the priority is h(state) ONLY.
+    (Part C4). Like astar_search, but the priority is h(state) ONLY.
     Use a `reached` set so a state is only ever pushed once.
     Test the goal when a node is popped.
     """
@@ -328,10 +328,27 @@ def greedy_best_first_search(problem: Problem, h: Callable[[Any], float],
 
 
 def is_consistent(csp: CSP, var: str, value: str, assignment: Dict[str, str]) -> bool:
-    """True if giving `var` this `value` breaks no constraint with assigned neighbours."""
-    # TODO (Part E2). Return False if any ALREADY-ASSIGNED neighbour of `var`
-    # has the same value; otherwise True. Unassigned neighbours never conflict.
-    raise NotImplementedError("is_consistent")
+    """
+    True if giving `var` this `value` breaks no constraint with assigned neighbours.
+    (Part E2). Return False if any ALREADY-ASSIGNED neighbour of `var`
+    has the same value; otherwise True. Unassigned neighbours never conflict.
+    """
+
+    if not assignment:
+        return True
+    for n in csp.neighbors[var]:
+        try:
+            if value == assignment[n]:
+                return False
+        except KeyError:
+            continue
+
+    return True
+
+    
+    
+
+
 
 
 def backtracking_search(csp: CSP) -> Optional[Dict[str, str]]:
