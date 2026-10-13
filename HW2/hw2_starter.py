@@ -345,23 +345,49 @@ def is_consistent(csp: CSP, var: str, value: str, assignment: Dict[str, str]) ->
 
     return True
 
-    
-    
-
-
 
 
 def backtracking_search(csp: CSP) -> Optional[Dict[str, str]]:
-    """Plain backtracking: variables in csp.variables order, values in domain order."""
-    # TODO (Part E3). Recursive backtracking:
-    #   - if every variable is assigned, return a copy of the assignment
-    #   - pick the FIRST unassigned variable in csp.variables order
-    #   - try each value in csp.domains[var], in order:
-    #       add 1 to csp.assignments_tried
-    #       if is_consistent(...): assign it, recurse, return the result if
-    #       it is not None, otherwise un-assign and try the next value
-    #   - if no value works, return None
-    raise NotImplementedError("backtracking_search")
+    """
+    Plain backtracking: variables in csp.variables order, values in domain order.
+    
+    (Part E3). Recursive backtracking:
+    - if every variable is assigned, return a copy of the assignment
+    - pick the FIRST unassigned variable in csp.variables order
+    - try each value in csp.domains[var], in order:
+        add 1 to csp.assignments_tried
+        if is_consistent(...): assign it, recurse, return the result if
+        it is not None, otherwise un-assign and try the next value
+    - if no value works, return None
+    """
+        
+    assignment = {}
+
+    def backtrack(next_var_idx):
+        if next_var_idx >= len(csp.variables):
+            return True
+        
+        current_var = csp.variables[next_var_idx]
+
+        for domain in csp.domains[current_var]:
+            csp.assignments_tried += 1
+
+            if is_consistent(csp, current_var, domain, assignment):
+                assignment[current_var] = domain
+
+                # Return immediately if a solution is found
+                if backtrack(next_var_idx + 1): # is_constraint_satisfied?
+                    return True
+                # Undo the assignment if recursion failed
+                assignment.pop(current_var)
+
+        return False
+            
+
+    if backtrack(0):
+        return assignment
+    return None
+    
 
 
 # ===========================================================================
