@@ -215,8 +215,7 @@ def misplaced_tiles(state: tuple, goal: tuple = EightPuzzleProblem.GOAL) -> int:
     (Part C1). Count non-blank tiles that are not in their goal square.
     Do NOT count the blank -- that would let h overestimate by one.
     """
-    count = sum([1 for c, g in zip(state, goal) if c != g])
-    return count - 1 if count else 0
+    return sum([1 for c, g in zip(state, goal) if c != 0 and c != g])
 
 
 def manhattan_distance(state: tuple, goal: tuple = EightPuzzleProblem.GOAL) -> int:
@@ -228,7 +227,7 @@ def manhattan_distance(state: tuple, goal: tuple = EightPuzzleProblem.GOAL) -> i
     # S: [4,0,1,2,3,8,5,6,7]
     # G: [3,2,4,5,7,1,9,3,0]
     distance = 0
-    goal_to_index = { i: n for i, n in enumerate(goal)}
+    goal_to_index = {n: i for i, n in enumerate(goal)}
     for i, n in enumerate(state):
         if n == 0:
             continue
@@ -259,27 +258,26 @@ def astar_search(problem: Problem, h: Callable[[Any], float],
     tiebreak = itertools.count()
 
     node = Node(state=problem.initial)
-    counters.generated += 1
     # f = g + h(state) where g is path_cost and h is the hueristic, but g is 0 initially
     f = h(node.state)
     heapq.heappush(frontier, (f, next(tiebreak), node))
-    reached = {node.state: f}
+    best_g = {node.state: 0}
 
     while frontier:
-        cost, _, node = heapq.heappop(frontier)
+        _, _, node = heapq.heappop(frontier)
 
-        if cost > reached[node.state]:
+        if node.path_cost > best_g[node.state]:
             continue
 
         if problem.is_goal(node.state):
             return node
-
+ 
         counters.expanded += 1
         for child in expand(problem, node):
             counters.generated += 1
             f = child.path_cost + h(child.state)
-            if child.state not in reached or f < reached[child.state]:
-                reached[child.state] = f
+            if child.path_cost < best_g.get(child.state, float("inf")):
+                best_g[child.state] = child.path_cost
                 heapq.heappush(frontier, (f, next(tiebreak), child))
     return None
 
@@ -298,15 +296,12 @@ def greedy_best_first_search(problem: Problem, h: Callable[[Any], float],
     frontier = []
 
     node = Node(problem.initial)
-    counters.generated += 1
     f = h(node.state)
-    heapq.heappush(frontier, (f, tiebreak, node))
-    reached = {node.state: f}
+    heapq.heappush(frontier, (f, next(tiebreak), node))
+    reached = {node.state}
 
     while frontier:
-        cost, _, node = heapq.heappop(frontier)
-        if cost > reached[node.state]:
-            continue
+        _, _, node = heapq.heappop(frontier)
 
         if problem.is_goal(node.state):
             return node
@@ -315,9 +310,9 @@ def greedy_best_first_search(problem: Problem, h: Callable[[Any], float],
         for child in expand(problem, node):
             counters.generated += 1
             f = h(child.state)
-            if child.state not in reached or f < reached[child.state]:
-                reached[child.state] = f
-                heapq.heappush(frontier, (f, tiebreak, child))
+            if child.state not in reached:
+                reached.add(child.state)
+                heapq.heappush(frontier, (f, next(tiebreak), child))
     return None
     
 
@@ -385,7 +380,7 @@ def backtracking_search(csp: CSP) -> Optional[Dict[str, str]]:
             
 
     if backtrack(0):
-        return assignment
+        return assignment.copy()
     return None
     
 
