@@ -355,7 +355,7 @@ def backtracking_search(csp: CSP) -> Optional[Dict[str, str]]:
         it is not None, otherwise un-assign and try the next value
     - if no value works, return None
     """
-        
+    debug = False
     assignment = {}
 
     def backtrack(next_var_idx):
@@ -366,6 +366,9 @@ def backtracking_search(csp: CSP) -> Optional[Dict[str, str]]:
 
         for domain in csp.domains[current_var]:
             csp.assignments_tried += 1
+            if debug:
+                print(f"Assignment tried count: {csp.assignments_tried}")
+                print(f"Current assignment: {assignment}")
 
             if is_consistent(csp, current_var, domain, assignment):
                 assignment[current_var] = domain
@@ -378,12 +381,10 @@ def backtracking_search(csp: CSP) -> Optional[Dict[str, str]]:
 
         return False
             
-
     if backtrack(0):
         return assignment.copy()
     return None
     
-
 
 # ===========================================================================
 
