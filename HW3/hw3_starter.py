@@ -96,11 +96,12 @@ def lookup(x: str, prop: str) -> Tuple[str, List[str]]:
 
 
 def is_a(x: str, category: str) -> bool:
-    """TODO A3 (4 pts). True if x is in `category` directly or through any chain of links.
+    """ 
+    A3 (4 pts). True if x is in `category` directly or through any chain of links.
     An object or category is NOT counted as being in itself.
         is_a("Ali", "People") -> True        is_a("Bo", "Employees") -> False
     """
-    raise NotImplementedError("TODO A3")
+    return (category in chain(x))
 
 
 # ===========================================================================
