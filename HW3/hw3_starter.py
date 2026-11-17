@@ -74,7 +74,8 @@ def chain(x: str) -> List[str]:
 
 
 def lookup(x: str, prop: str) -> Tuple[str, List[str]]:
-    """TODO A2 (7 pts). Inheritance with exceptions.
+    """ 
+    A2 (7 pts). Inheritance with exceptions.
 
     Walk chain(x) from nearest to farthest. The FIRST place whose FACTS entry
     contains prop gives the answer. Return (value, trail), where trail lists
@@ -83,7 +84,15 @@ def lookup(x: str, prop: str) -> Tuple[str, List[str]]:
         lookup("Ali", "PaysTuition") -> ("no", ["Ali", "GradStudents"])
         lookup("Ali", "HasID")       -> ("yes", ["Ali", "GradStudents", "Students", "People"])
     """
-    raise NotImplementedError("TODO A2")
+    x_chain = chain(x)
+    trail = []
+    for val in x_chain:
+        trail.append(val)
+        if (val not in FACTS) or (prop not in FACTS[val]):
+            continue
+        ans = FACTS[val][prop]
+        break
+    return (ans, trail)
 
 
 def is_a(x: str, category: str) -> bool:
