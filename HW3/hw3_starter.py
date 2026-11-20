@@ -127,15 +127,15 @@ def make_action(name, pre, add, delete) -> Action:
 
 
 def applicable(action: Action, state: State) -> bool:
-    """TODO B1 (3 pts). True if EVERY precondition of `action` is in `state`."""
-    raise NotImplementedError("TODO B1")
+    """B1 (3 pts). True if EVERY precondition of `action` is in `state`."""
 
+    return action.pre.issubset(state)
 
 def result(action: Action, state: State) -> State:
-    """TODO B2 (4 pts). The new state: remove the delete list, then add the add list.
+    """B2 (4 pts). The new state: remove the delete list, then add the add list.
     Return a frozenset. Do not modify `state` (frozensets cannot be modified anyway)."""
-    raise NotImplementedError("TODO B2")
 
+    return state.difference(action.delete).union(action.add)
 
 def robot_domain(rooms: List[str], packages: List[str]) -> List[Action]:
     """TODO B3 (8 pts). Build every ground action for a one-handed robot R.
@@ -143,7 +143,7 @@ def robot_domain(rooms: List[str], packages: List[str]) -> List[Action]:
     Facts used:  At(R,<room>)   At(<pkg>,<room>)   Holding(<pkg>)   HandEmpty
     Every room connects directly to every other room.
 
-      Move(a,b)      pre: At(R,a)                          add: At(R,b)                  delete: At(R,a)
+      Move(a,b)      pre: At(R,a)                           add: At(R,b)                  delete: At(R,a)
       Pick(p,r)      pre: At(R,r), At(p,r), HandEmpty       add: Holding(p)               delete: At(p,r), HandEmpty
       Drop(p,r)      pre: At(R,r), Holding(p)               add: At(p,r), HandEmpty       delete: Holding(p)
 
@@ -152,7 +152,49 @@ def robot_domain(rooms: List[str], packages: List[str]) -> List[Action]:
     "Move(Office,Lab)", "Pick(P1,Lab)", "Drop(P1,Office)" (no spaces).
     The order of the returned list does not matter.
     """
-    raise NotImplementedError("TODO B3")
+    fact = lambda a, p1, p2: f"{a}({p1},{p2})"
+
+    Move = lambda p1, p2: fact("Move", p1, p2)
+    Pick = lambda p1, p2: fact("Pick", p1, p2)
+    Drop = lambda p1, p2: fact("Drop", p1, p2)
+
+    At = lambda p1, p2: fact("At", p1, p2)
+    Holding = lambda p: f"Holding({p})"
+    HandEmpty = "HandEmpty"
+
+    actions = []
+    for p1 in rooms:
+        for p2 in rooms:
+            if p1 == p2:
+                continue
+            move = Move(p1, p2)
+            pre = delete = frozenset([At("R", p1)])
+            add = frozenset([At("R", p2)])
+            action = Action(move, pre, add, delete)
+            actions.append(action)
+            
+    for r in rooms:
+        for p in packages:
+            pick = Pick(p, r)
+            pre = frozenset([At("R", r), At(p, r), HandEmpty])
+            add = frozenset([Holding(p)])
+            delete = frozenset([At(p, r), HandEmpty])
+            action = Action(pick, pre, add, delete)
+            actions.append(action)
+
+    for r in rooms:
+        for p in packages:
+            drop = Drop(p, r)
+            pre = frozenset([At("R", r), Holding(p)])
+            add = frozenset([At(p,r), HandEmpty])
+            delete = frozenset([Holding(p)])
+            action = Action(drop, pre, add, delete)
+            actions.append(action)
+
+    return actions
+    
+    
+    
 
 
 def forward_bfs(init: State, goal: FrozenSet[str], actions: List[Action]) -> Optional[List[str]]:
