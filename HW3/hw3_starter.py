@@ -196,7 +196,8 @@ def robot_domain(rooms: List[str], packages: List[str]) -> List[Action]:
 
 
 def forward_bfs(init: State, goal: FrozenSet[str], actions: List[Action]) -> Optional[List[str]]:
-    """TODO B4 (12 pts). Forward (progression) planning with breadth-first search.
+    """
+    B4 (12 pts). Forward (progression) planning with breadth-first search.
 
     Return the SHORTEST plan as a list of action NAMES, e.g.
     ["Move(Office,Mailroom)", "Pick(P1,Mailroom)", ...], or None if no plan exists.
@@ -225,7 +226,7 @@ def forward_bfs(init: State, goal: FrozenSet[str], actions: List[Action]) -> Opt
 
             next_plan = plan + [action.name]
 
-            if next_state == goal:
+            if goal.issubset(next_state):
                 return next_plan
 
             reached.add(next_state)
@@ -243,8 +244,20 @@ def validate_plan(init: State, goal: FrozenSet[str], actions: List[Action], plan
     At the end, the plan is valid only if every goal fact is in the final state.
     Return True or False.
     """
-    raise NotImplementedError("TODO B5")
+    action_dict = {action.name: action for action in actions}
+    state = init
+    for action in plan:
+        if action not in action_dict:
+            return False
 
+        # Check preconditions
+        if not applicable(action_dict[action], state):
+            return False
+
+        state = result(action_dict[action], state)
+
+    return goal.issubset(state)
+        
 
 # GIVEN: the Homework 3 delivery problem (used in the tests and in the PDF questions).
 HW_ROOMS = ["Office", "Mailroom", "Lab"]
