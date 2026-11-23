@@ -138,7 +138,7 @@ def result(action: Action, state: State) -> State:
     return state.difference(action.delete).union(action.add)
 
 def robot_domain(rooms: List[str], packages: List[str]) -> List[Action]:
-    """TODO B3 (8 pts). Build every ground action for a one-handed robot R.
+    """B3 (8 pts). Build every ground action for a one-handed robot R.
 
     Facts used:  At(R,<room>)   At(<pkg>,<room>)   Holding(<pkg>)   HandEmpty
     Every room connects directly to every other room.
@@ -193,8 +193,6 @@ def robot_domain(rooms: List[str], packages: List[str]) -> List[Action]:
 
     return actions
     
-    
-    
 
 
 def forward_bfs(init: State, goal: FrozenSet[str], actions: List[Action]) -> Optional[List[str]]:
@@ -206,7 +204,33 @@ def forward_bfs(init: State, goal: FrozenSet[str], actions: List[Action]) -> Opt
     Use a reached set so that no state is added to the frontier twice.
     If the start state already satisfies the goal, return [] (an empty plan).
     """
-    raise NotImplementedError("TODO B4")
+
+    if goal.issubset(init):
+        return []
+    
+
+    frontier = deque([(init, [])])
+    reached = {init}
+    while frontier:
+        state, plan = frontier.popleft()
+        
+        for action in actions:
+            if not applicable(action, state):
+                continue
+
+            next_state = result(action, state)
+
+            if next_state in reached:
+                continue
+
+            next_plan = plan + [action.name]
+
+            if next_state == goal:
+                return next_plan
+
+            reached.add(next_state)
+            frontier.append([next_state, next_plan])
+    return None
 
 
 def validate_plan(init: State, goal: FrozenSet[str], actions: List[Action], plan: List[str]) -> bool:
