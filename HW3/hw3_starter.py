@@ -286,16 +286,28 @@ ALARM: Network = [
 
 
 def p_world(net: Network, world: Dict[str, bool]) -> float:
-    """TODO C1 (8 pts). Probability of one COMPLETE world (every node has a value).
+    """ 
+    C1 (8 pts). Probability of one COMPLETE world (every node has a value).
     Multiply, for every node, P(node = its value | its parents' values).
     Remember: if the node is False, use 1 - (table number).
         p_world(ALARM, {"B": False, "E": False, "A": True, "J": True, "M": True}) ≈ 0.000628
     """
-    raise NotImplementedError("TODO C1")
+    probability = 1.0
+
+    for name, parents, table in net:
+        parent_values = tuple(world[parent] for parent in parents)
+        p_true = table[parent_values]
+
+        if world[name]:
+            probability *= p_true
+        else:
+            probability *= 1 - p_true
+    return probability
 
 
 def enumerate_ask(net: Network, X: str, evidence: Dict[str, bool]) -> float:
-    """TODO C2 (12 pts). Inference by enumeration: return P(X = True | evidence).
+    """
+    C2 (12 pts). Inference by enumeration: return P(X = True | evidence).
 
     1. The hidden variables are all nodes that are neither X nor in `evidence`.
     2. For X = True: add p_world over every combination of hidden values.
@@ -305,7 +317,28 @@ def enumerate_ask(net: Network, X: str, evidence: Dict[str, bool]) -> float:
     (X is never one of the evidence variables in the tests.)
         enumerate_ask(ALARM, "B", {"J": True, "M": True}) ≈ 0.284
     """
-    raise NotImplementedError("TODO C2")
+    hidden = [
+        name for name, _, _ in net
+        if name != X and name not in evidence
+    ]
+
+    totals = {}
+
+    for x_value in (True, False):
+        total = 0.0
+
+        for values in itertools.product((True, False), repeat=len(hidden)):
+            world = evidence.copy()
+            world[X] = x_value
+
+            for name, value in zip(hidden, values):
+                world[name] = value
+
+            total += p_world(net, world)
+
+        totals[x_value] = total
+
+    return totals[True] / (totals[True] + totals[False])
 
 
 # ===========================================================================
