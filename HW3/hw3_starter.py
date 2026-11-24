@@ -346,7 +346,8 @@ class GridMDP:
 
 
 def value_iteration(mdp: GridMDP, epsilon: float = 1e-6) -> Dict[Tuple[int, int], float]:
-    """TODO D1 (17 pts). Return a dict: state -> utility U(s).
+    """ 
+    D1 (17 pts). Return a dict: state -> utility U(s).
 
     Start with U(s) = 0 for every state. Repeat until no value changes by more
     than epsilon in one round:
@@ -356,7 +357,42 @@ def value_iteration(mdp: GridMDP, epsilon: float = 1e-6) -> Dict[Tuple[int, int]
     Compute every U'(s) from the OLD U, then replace U by U' (one full round at a time).
     With r = -0.04 and gamma = 1, U[(1,1)] is about 0.705 (R&N Figure 17.3).
     """
-    raise NotImplementedError("TODO D1")
+
+    def compute_action_values(state, mdp):
+        action_values = []
+
+        for a in mdp.actions(state):
+            expected_utility = sum(
+                p * U[s2]
+                for p, s2 in mdp.transitions(state, a)
+            )
+            action_values.append(expected_utility)
+
+        return action_values
+    
+
+    U = {s: 0.0 for s in mdp.states}
+    biggest_change = float("inf")
+
+    while biggest_change > epsilon:
+        new_U = {}
+        biggest_change = 0.0
+
+        for s in mdp.states:
+            if s in mdp.terminals:
+                new_U[s] = mdp.reward(s)
+            else:
+                action_values = compute_action_values(s, mdp)
+                new_U[s] = (
+                    mdp.reward(s) + mdp.gamma * max(action_values)
+                )
+            biggest_change = max(
+                biggest_change, abs(new_U[s] - U[s])
+            )
+        U = new_U
+
+    return U
+
 
 
 def best_policy(mdp: GridMDP, U: Dict[Tuple[int, int], float]) -> Dict[Tuple[int, int], Optional[str]]:
@@ -364,8 +400,28 @@ def best_policy(mdp: GridMDP, U: Dict[Tuple[int, int], float]) -> Dict[Tuple[int
     utility:  sum over (p, s2) in transitions(s, a) of p * U[s2].
     Terminal states map to None. If two actions tie, either is accepted.
     """
-    raise NotImplementedError("TODO D2")
+    policy = {}
 
+    for s in mdp.states:
+        if s in mdp.terminals:
+            policy[s] = None
+        else:
+            best_action = None
+            best_value = float("-inf")
+
+            for a in mdp.actions(s):
+                expected_utility = sum(
+                    p * U[s2]
+                    for p, s2 in mdp.transitions(s, a)
+                )
+
+                if expected_utility > best_value:
+                    best_value = expected_utility
+                    best_action = a
+
+            policy[s] = best_action
+
+    return policy
 
 # ===========================================================================
 # Prints the numbers your PDF answers ask for (run: python hw3_starter.py)
